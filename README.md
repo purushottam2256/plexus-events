@@ -76,7 +76,7 @@ const events: Event[] = [
   },
   // existing events...
 ];
-
+```
 **About Plexus Club**
 
 Plexus Club is the technical club at MRCE College, organizing various events, workshops and hackathons to enhance students technical skills and knowledge.
