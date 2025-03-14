@@ -31,7 +31,7 @@ A responsive React application that showcases upcoming Plexus Club events at MRC
 ### Installation
 
 1. Clone the repository
-   git clone https://github.com/your-username/plexus-events.git cd plexus-events
+   git clone https://github.com/purushottam2256/plexus-events.git cd plexus-events
 
 2. Install dependencies
    npm install
