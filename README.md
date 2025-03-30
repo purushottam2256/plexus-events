@@ -1,6 +1,6 @@
 # Plexus Club Events - MRCE College
 
-![Plexus Logo](/images/Plexus%20White.png)
+![Plexus Logo](https://github.com/purushottam2256/plexus-events/blob/main/public/images/Plexus%20White.png)
 
 A responsive React application that showcases upcoming Plexus Club events at MRCE College, allowing students to view event details and register.
 
