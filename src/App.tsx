@@ -29,6 +29,21 @@ interface Event {
   logo?: string;
 }
 
+// Function to handle image path resolution
+const resolveImagePath = (imagePath: string) => {
+  // If it's an external URL (starts with http or https), use it as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // If it's a relative path without a leading slash, add one
+  if (!imagePath.startsWith('/')) {
+    return `/${imagePath}`;
+  }
+  
+  return imagePath;
+};
+
 function App() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -36,12 +51,21 @@ function App() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [countdowns, setCountdowns] = useState<{ [key: number]: string }>({});
   const [registrationStatus, setRegistrationStatus] = useState<{ [key: number]: { isOpen: boolean, message: string } }>({});
+  const [imageFallbacks, setImageFallbacks] = useState<{ [key: string]: boolean }>({});
+
+  // Handle image error
+  const handleImageError = (imageUrl: string) => {
+    setImageFallbacks(prev => ({
+      ...prev,
+      [imageUrl]: true
+    }));
+  };
 
   // Fetch events data from public folder
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('/events.json');
+        const response = await fetch('./events.json');
         if (!response.ok) {
           throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
         }
@@ -288,9 +312,16 @@ function App() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
             {/* MRCE Logo */}
             <img 
-              src="/images/Plexus White.png"
+              src="./images/Plexus White.png"
               alt="MRCE College Logo" 
               className="h-36 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallbackText = document.createElement('span');
+                fallbackText.textContent = 'PLEXUS';
+                fallbackText.className = 'font-bold text-4xl text-white';
+                e.currentTarget.parentNode?.appendChild(fallbackText);
+              }}
             />
           </div>
           
@@ -315,11 +346,18 @@ function App() {
             <div className="bg-white/5 rounded-xl overflow-hidden backdrop-blur-sm border border-white/10 hover:border-blue-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
               {/* Event Image and Status Badge */}
               <div className="h-80 overflow-hidden relative">
-                <img 
-                  src={selectedEvent.image} 
-                  alt={selectedEvent.name} 
-                  className="w-full h-full object-cover"
-                />
+                {!imageFallbacks[selectedEvent.image] ? (
+                  <img 
+                    src={resolveImagePath(selectedEvent.image)} 
+                    alt={selectedEvent.name} 
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(selectedEvent.image)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-blue-900/50 flex items-center justify-center">
+                    <span className="text-2xl font-bold">{selectedEvent.name}</span>
+                  </div>
+                )}
                 <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(selectedEvent.status)}`}>
                   {getStatusLabel(selectedEvent.status)}
                 </div>
@@ -330,11 +368,12 @@ function App() {
                   <h2 className="text-3xl font-bold">{selectedEvent.name}</h2>
                   
                   {/* Event Logo */}
-                  {selectedEvent.logo && (
+                  {selectedEvent.logo && !imageFallbacks[selectedEvent.logo] && (
                     <img 
-                      src={selectedEvent.logo} 
+                      src={resolveImagePath(selectedEvent.logo)} 
                       alt={`${selectedEvent.name} Logo`} 
                       className="h-10 mt-4 md:mt-0"
+                      onError={() => handleImageError(selectedEvent.logo!)}
                     />
                   )}
                 </div>
@@ -443,11 +482,18 @@ function App() {
               >
                 {/* Event Image and Status Badge */}
                 <div className="h-48 overflow-hidden relative">
-                  <img 
-                    src={event.image} 
-                    alt={event.name} 
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
+                  {!imageFallbacks[event.image] ? (
+                    <img 
+                      src={resolveImagePath(event.image)} 
+                      alt={event.name} 
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      onError={() => handleImageError(event.image)}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-blue-900/50 flex items-center justify-center">
+                      <span className="text-xl font-bold">{event.name}</span>
+                    </div>
+                  )}
                   <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(event.status)}`}>
                     {getStatusLabel(event.status)}
                   </div>
@@ -459,11 +505,12 @@ function App() {
                     <h2 className="text-xl font-bold truncate">{event.name}</h2>
                     
                     {/* Event Logo */}
-                    {event.logo && (
+                    {event.logo && !imageFallbacks[event.logo] && (
                       <img 
-                        src={event.logo} 
+                        src={resolveImagePath(event.logo)} 
                         alt={`${event.name} Logo`} 
                         className="h-6"
+                        onError={() => handleImageError(event.logo!)}
                       />
                     )}
                   </div>
@@ -520,39 +567,39 @@ function App() {
       {/* Footer */}
       <footer className="mt-20 py-6 border-t border-white/10 text-center text-white/60">
         <div className="flex justify-center items-center gap-4 mb-4">
-        <img 
-            src="/images/mrce.png"
+          <img 
+            src="./images/mrce.png"
+            alt="MRCE Logo" 
+            className="h-24 object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallbackText = document.createElement('span');
+              fallbackText.textContent = 'MRCE';
+              fallbackText.className = 'font-bold text-2xl text-white';
+              e.currentTarget.parentNode?.appendChild(fallbackText);
+            }}
+          />
+          <img 
+            src="./images/Plexus White.png"
             alt="Plexus Logo" 
             className="h-24 object-contain"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
               const fallbackText = document.createElement('span');
               fallbackText.textContent = 'PLEXUS';
-              fallbackText.className = 'font-tech text-xl text-white tracking-widest';
+              fallbackText.className = 'font-bold text-2xl text-white';
               e.currentTarget.parentNode?.appendChild(fallbackText);
             }}
           />
           <img 
-            src="/images/Plexus White.png"
-            alt="Plexus Logo" 
-            className="h-24 object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              const fallbackText = document.createElement('span');
-              fallbackText.textContent = 'PLEXUS';
-              fallbackText.className = 'font-tech text-xl text-white tracking-widest';
-              e.currentTarget.parentNode?.appendChild(fallbackText);
-            }}
-          />
-          <img 
-            src="/images/aiml.png"
+            src="./images/aiml.png"
             alt="AIML Logo" 
             className="h-24 object-contain"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
               const fallbackText = document.createElement('span');
-              fallbackText.textContent = 'PLEXUS';
-              fallbackText.className = 'font-tech text-xl text-white tracking-widest';
+              fallbackText.textContent = 'AIML';
+              fallbackText.className = 'font-bold text-2xl text-white';
               e.currentTarget.parentNode?.appendChild(fallbackText);
             }}
           />
